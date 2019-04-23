@@ -1,0 +1,8 @@
+debug = true
+
+[api]
+addr = "0.0.0.0:8765"
+
+[mongo]
+uri = "mongodb://127.0.0.1:27017"
+database = "mqtt-console"
