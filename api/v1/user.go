@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/danclive/mqtt-console/api/util"
-	"github.com/danclive/mqtt-console/config"
 	"github.com/danclive/mqtt-console/db"
 	"github.com/danclive/mqtt-console/log"
 	"github.com/gin-gonic/gin"
@@ -14,17 +13,31 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func Userlist(c *gin.Context) {
-	log.Info("user list")
+func Mine(c *gin.Context) {
+	value, has := c.Get("user")
+	if !has {
+		c.JSON(util.Error(404, "404"))
+		return
+	}
 
+	user := value.(db.User)
+
+	c.JSON(util.Success(user))
+}
+
+func UserList(c *gin.Context) {
 	limit, offset, err := util.Page(c)
+	if err != nil {
+		c.JSON(util.Error(400, "分页参数错误"))
+		return
+	}
 
 	delete := false
 	if c.Query("delete") == "true" {
 		delete = true
 	}
 
-	collection := db.MongoClient.Database(config.Config.Mongo.Database, nil).Collection("user", nil)
+	collection := db.GetUserColl()
 
 	context := context.Background()
 
@@ -56,7 +69,6 @@ func Userlist(c *gin.Context) {
 
 	for cur.Next(context) {
 		var user db.User
-		log.Info(cur)
 		if err := cur.Decode(&user); err != nil {
 			c.JSON(util.Error(500, err.Error()))
 			return
@@ -74,7 +86,6 @@ func Userlist(c *gin.Context) {
 }
 
 func UserDetail(c *gin.Context) {
-
 	user_id := c.Param("id")
 
 	if len(user_id) != 24 {
@@ -93,7 +104,7 @@ func UserDetail(c *gin.Context) {
 		delete = true
 	}
 
-	collection := db.MongoClient.Database(config.Config.Mongo.Database, nil).Collection("user", nil)
+	collection := db.GetUserColl()
 
 	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": delete}, &options.FindOneOptions{})
 	if result.Err() != nil {
@@ -120,6 +131,7 @@ func UserPost(c *gin.Context) {
 		Name  string `json:"name"`
 		Pass  string `json:"pass"`
 		Super bool   `json:"super"`
+		Desc  string `json:"desc"`
 	}
 
 	if err := c.Bind(&u); err != nil {
@@ -137,12 +149,26 @@ func UserPost(c *gin.Context) {
 		return
 	}
 
+	collection := db.GetUserColl()
+
+	count, err := collection.CountDocuments(context.Background(), bson.M{"name": u.Name}, &options.CountOptions{})
+	if err != nil {
+		c.JSON(util.Error(500, err.Error()))
+		return
+	}
+
+	if count > 0 {
+		c.JSON(util.Error(409, "用户名已存在"))
+		return
+	}
+
 	user := db.User{
 		ID:    primitive.NewObjectID(),
 		Name:  u.Name,
 		Pass:  util.PassEncode(u.Pass),
-		Time:  primitive.NewDateTimeFromTime(time.Now()),
+		Time:  time.Now(),
 		Super: u.Super,
+		Desc:  u.Desc,
 	}
 
 	log.Debug(user)
@@ -154,8 +180,6 @@ func UserPost(c *gin.Context) {
 	}
 
 	log.Debug(doc)
-
-	collection := db.MongoClient.Database(config.Config.Mongo.Database, nil).Collection("user", nil)
 
 	_, err = collection.InsertOne(context.Background(), doc, &options.InsertOneOptions{})
 	if err != nil {
@@ -185,7 +209,7 @@ func UserPatch(c *gin.Context) {
 		delete = true
 	}
 
-	collection := db.MongoClient.Database(config.Config.Mongo.Database, nil).Collection("user", nil)
+	collection := db.GetUserColl()
 
 	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": delete}, &options.FindOneOptions{})
 	if result.Err() != nil {
@@ -208,6 +232,7 @@ func UserPatch(c *gin.Context) {
 		Name  string `json:"name"`
 		Pass  string `json:"pass"`
 		Super string `json:"super"`
+		Desc  string `json:"Desc"`
 	}
 
 	if err := c.Bind(&u); err != nil {
@@ -229,6 +254,10 @@ func UserPatch(c *gin.Context) {
 		doc["super"] = true
 	} else if u.Super == "false" {
 		doc["super"] = false
+	}
+
+	if u.Desc != "" {
+		doc["desc"] = u.Desc
 	}
 
 	_, err = collection.UpdateOne(context.Background(), bson.M{"_id": oid}, bson.M{"$set": doc}, &options.UpdateOptions{})
@@ -254,7 +283,7 @@ func UserDelete(c *gin.Context) {
 		return
 	}
 
-	collection := db.MongoClient.Database(config.Config.Mongo.Database, nil).Collection("user", nil)
+	collection := db.GetUserColl()
 
 	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": false}, &options.FindOneOptions{})
 	if result.Err() != nil {
@@ -296,7 +325,7 @@ func UserReset(c *gin.Context) {
 		return
 	}
 
-	collection := db.MongoClient.Database(config.Config.Mongo.Database, nil).Collection("user", nil)
+	collection := db.GetUserColl()
 
 	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": true}, &options.FindOneOptions{})
 	if result.Err() != nil {

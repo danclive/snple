@@ -33,7 +33,7 @@ func InitMongo() {
 	log.Info("ping mongo ...")
 	err = client.Ping(ctx, nil)
 	if err != nil {
-
+		log.Fatal("ping mongo 失败: ", err)
 	}
 
 	MongoClient = client
@@ -58,8 +58,9 @@ func initDatabse() {
 			ID:    primitive.NewObjectID(),
 			Name:  "admin",
 			Pass:  "efa1f375d76194fa51a3556a97e641e61685f914d446979da50a551a4333ffd7",
-			Time:  primitive.NewDateTimeFromTime(time.Now()),
+			Time:  time.Now(),
 			Super: true,
+			Desc:  "管理员",
 		}
 
 		doc, err := bson.Marshal(&user)
@@ -77,5 +78,5 @@ func initDatabse() {
 		log.Debug(result)
 	}
 
-	log.Info("OK")
+	log.Info("OK！")
 }
