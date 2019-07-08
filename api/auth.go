@@ -10,6 +10,7 @@ import (
 	"github.com/danclive/mqtt-console/config"
 	"github.com/danclive/mqtt-console/db"
 	"github.com/danclive/mqtt-console/log"
+	v1 "github.com/danclive/mqtt-console/model/v1"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"time"
@@ -33,7 +34,7 @@ var AuthMiddleware = GinJWTMiddleware{
 			return userId, false
 		}
 
-		var user db.User
+		var user v1.User
 
 		if err := result.Decode(&user); err != nil {
 			log.WarnWithFields(err, log.Fields{"name": userId})
@@ -57,7 +58,7 @@ var AuthMiddleware = GinJWTMiddleware{
 			return false
 		}
 
-		var user db.User
+		var user v1.User
 
 		if err := result.Decode(&user); err != nil {
 			log.WarnWithFields(err, log.Fields{"name": userId})

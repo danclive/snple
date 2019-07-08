@@ -291,7 +291,7 @@ func (mw *GinJWTMiddleware) middlewareImpl(c *gin.Context) {
 
 	id := mw.IdentityHandler(claims)
 	c.Set("JWT_PAYLOAD", claims)
-	c.Set("USER_ID", id)
+	c.Set("", id)
 
 	if !mw.Authorizator(id, c) {
 		mw.unauthorized(c, http.StatusForbidden, mw.HTTPStatusMessageFunc(ErrForbidden, c))

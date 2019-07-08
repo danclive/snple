@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/danclive/mqtt-console/api/util"
-	"github.com/danclive/mqtt-console/db"
 	"github.com/danclive/mqtt-console/log"
+	v1 "github.com/danclive/mqtt-console/model/v1"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,7 +20,7 @@ func Mine(c *gin.Context) {
 		return
 	}
 
-	user := value.(db.User)
+	user := value.(v1.User)
 
 	c.JSON(util.Success(user))
 }
@@ -37,7 +37,7 @@ func UserList(c *gin.Context) {
 		delete = true
 	}
 
-	collection := db.GetUserColl()
+	collection := v1.GetUserColl()
 
 	context := context.Background()
 
@@ -65,10 +65,10 @@ func UserList(c *gin.Context) {
 
 	defer cur.Close(context)
 
-	arrays := make([]db.User, 0, 10)
+	arrays := make([]v1.User, 0, 10)
 
 	for cur.Next(context) {
-		var user db.User
+		var user v1.User
 		if err := cur.Decode(&user); err != nil {
 			c.JSON(util.Error(500, err.Error()))
 			return
@@ -104,7 +104,7 @@ func UserDetail(c *gin.Context) {
 		delete = true
 	}
 
-	collection := db.GetUserColl()
+	collection := v1.GetUserColl()
 
 	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": delete}, &options.FindOneOptions{})
 	if result.Err() != nil {
@@ -112,7 +112,7 @@ func UserDetail(c *gin.Context) {
 		return
 	}
 
-	var user db.User
+	var user v1.User
 	if err = result.Decode(&user); err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			c.JSON(util.Error(404, "404"))
@@ -135,7 +135,7 @@ func UserPost(c *gin.Context) {
 	}
 
 	if err := c.Bind(&u); err != nil {
-		c.JSON(util.Error(500, err.Error()))
+		c.JSON(util.Error(400, err.Error()))
 		return
 	}
 
@@ -149,7 +149,7 @@ func UserPost(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetUserColl()
+	collection := v1.GetUserColl()
 
 	count, err := collection.CountDocuments(context.Background(), bson.M{"name": u.Name}, &options.CountOptions{})
 	if err != nil {
@@ -162,7 +162,7 @@ func UserPost(c *gin.Context) {
 		return
 	}
 
-	user := db.User{
+	user := v1.User{
 		ID:    primitive.NewObjectID(),
 		Name:  u.Name,
 		Pass:  util.PassEncode(u.Pass),
@@ -209,7 +209,7 @@ func UserPatch(c *gin.Context) {
 		delete = true
 	}
 
-	collection := db.GetUserColl()
+	collection := v1.GetUserColl()
 
 	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": delete}, &options.FindOneOptions{})
 	if result.Err() != nil {
@@ -217,7 +217,7 @@ func UserPatch(c *gin.Context) {
 		return
 	}
 
-	var user db.User
+	var user v1.User
 	if err = result.Decode(&user); err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			c.JSON(util.Error(404, "404"))
@@ -236,7 +236,7 @@ func UserPatch(c *gin.Context) {
 	}
 
 	if err := c.Bind(&u); err != nil {
-		c.JSON(util.Error(500, err.Error()))
+		c.JSON(util.Error(400, err.Error()))
 		return
 	}
 
@@ -283,7 +283,7 @@ func UserDelete(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetUserColl()
+	collection := v1.GetUserColl()
 
 	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": false}, &options.FindOneOptions{})
 	if result.Err() != nil {
@@ -291,7 +291,7 @@ func UserDelete(c *gin.Context) {
 		return
 	}
 
-	var user db.User
+	var user v1.User
 	if err = result.Decode(&user); err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			c.JSON(util.Error(404, "404"))
@@ -325,7 +325,7 @@ func UserReset(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetUserColl()
+	collection := v1.GetUserColl()
 
 	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": true}, &options.FindOneOptions{})
 	if result.Err() != nil {
@@ -333,7 +333,7 @@ func UserReset(c *gin.Context) {
 		return
 	}
 
-	var user db.User
+	var user v1.User
 	if err = result.Decode(&user); err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			c.JSON(util.Error(404, "404"))

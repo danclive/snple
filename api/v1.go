@@ -5,8 +5,8 @@ import (
 
 	"github.com/danclive/mqtt-console/api/util"
 	v1 "github.com/danclive/mqtt-console/api/v1"
-	"github.com/danclive/mqtt-console/db"
 	"github.com/danclive/mqtt-console/log"
+	modelv1 "github.com/danclive/mqtt-console/model/v1"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -37,6 +37,11 @@ func V1(engine gin.IRouter) {
 	device.DELETE("/:id", v1.DeviceDelete)
 	device.DELETE("/:id/reset", v1.DeviceReset)
 
+	emqx := engine.Group("emqx")
+	emqx.POST("/auth", v1.EmqxAuth)
+	emqx.GET("/super", v1.EmqxSuper)
+	emqx.POST("/acl", v1.EmqxAcl)
+
 	gutil := engine.Group("util")
 	gutil.GET("/genid", func(c *gin.Context) {
 		c.JSON(util.Success(gin.H{"id": primitive.NewObjectID()}))
@@ -48,7 +53,7 @@ func super(c *gin.Context) {
 		"success": false,
 		"message": gin.H{
 			"code": 403,
-			"info": "权限不足: 您不是管理员!",
+			"info": "权限不足: 你不是管理员!",
 		},
 	}
 
@@ -57,7 +62,7 @@ func super(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusForbidden, json)
 	}
 
-	user := value.(db.User)
+	user := value.(modelv1.User)
 
 	if !user.Super {
 		log.WarnWithFields("super: ", log.Fields{"user": user})

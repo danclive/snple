@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/danclive/mqtt-console/api/util"
-	"github.com/danclive/mqtt-console/db"
 	"github.com/danclive/mqtt-console/log"
+	v1 "github.com/danclive/mqtt-console/model/v1"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -38,7 +38,7 @@ func UserDeviceList(c *gin.Context) {
 		delete = true
 	}
 
-	collection := db.GetDeviceColl()
+	collection := v1.GetDeviceColl()
 
 	context := context.Background()
 
@@ -66,10 +66,10 @@ func UserDeviceList(c *gin.Context) {
 
 	defer cur.Close(context)
 
-	arrays := make([]db.Device, 0, 10)
+	arrays := make([]v1.Device, 0, 10)
 
 	for cur.Next(context) {
-		var device db.Device
+		var device v1.Device
 		if err := cur.Decode(&device); err != nil {
 			c.JSON(util.Error(500, err.Error()))
 			return
@@ -104,7 +104,7 @@ func UserDevicePost(c *gin.Context) {
 	}
 
 	if err := c.Bind(&d); err != nil {
-		c.JSON(util.Error(500, err.Error()))
+		c.JSON(util.Error(400, err.Error()))
 		return
 	}
 
@@ -113,7 +113,7 @@ func UserDevicePost(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetDeviceColl()
+	collection := v1.GetDeviceColl()
 
 	count, err := collection.CountDocuments(context.Background(), bson.M{"device_id": d.DeviceId}, &options.CountOptions{})
 	if err != nil {
@@ -126,7 +126,7 @@ func UserDevicePost(c *gin.Context) {
 		return
 	}
 
-	device := db.Device{
+	device := v1.Device{
 		ID:       primitive.NewObjectID(),
 		UserID:   oid,
 		DeviceID: d.DeviceId,
@@ -167,7 +167,7 @@ func Devicelist(c *gin.Context) {
 		delete = true
 	}
 
-	collection := db.GetDeviceColl()
+	collection := v1.GetDeviceColl()
 
 	context := context.Background()
 
@@ -195,10 +195,10 @@ func Devicelist(c *gin.Context) {
 
 	defer cur.Close(context)
 
-	arrays := make([]db.Device, 0, 10)
+	arrays := make([]v1.Device, 0, 10)
 
 	for cur.Next(context) {
-		var device db.Device
+		var device v1.Device
 		if err := cur.Decode(&device); err != nil {
 			c.JSON(util.Error(500, err.Error()))
 			return
@@ -234,15 +234,18 @@ func DeviceDetail(c *gin.Context) {
 		delete = true
 	}
 
-	collection := db.GetDeviceColl()
+	collection := v1.GetDeviceColl()
 
-	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": delete}, &options.FindOneOptions{})
+	result := collection.FindOne(context.Background(),
+		bson.M{"_id": oid, "delete": delete},
+		&options.FindOneOptions{})
+
 	if result.Err() != nil {
 		c.JSON(util.Error(500, result.Err().Error()))
 		return
 	}
 
-	var device db.Device
+	var device v1.Device
 	if err = result.Decode(&device); err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			c.JSON(util.Error(404, "404"))
@@ -268,7 +271,7 @@ func DevicePost(c *gin.Context) {
 	}
 
 	if err := c.Bind(&d); err != nil {
-		c.JSON(util.Error(500, err.Error()))
+		c.JSON(util.Error(400, err.Error()))
 		return
 	}
 
@@ -277,7 +280,7 @@ func DevicePost(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetDeviceColl()
+	collection := v1.GetDeviceColl()
 
 	count, err := collection.CountDocuments(context.Background(), bson.M{"device_id": d.DeviceId}, &options.CountOptions{})
 	if err != nil {
@@ -292,7 +295,7 @@ func DevicePost(c *gin.Context) {
 
 	user := get_user(c)
 
-	device := db.Device{
+	device := v1.Device{
 		ID:       primitive.NewObjectID(),
 		UserID:   user.ID,
 		DeviceID: d.DeviceId,
@@ -340,7 +343,7 @@ func DevicePatch(c *gin.Context) {
 		delete = true
 	}
 
-	collection := db.GetDeviceColl()
+	collection := v1.GetDeviceColl()
 
 	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": delete}, &options.FindOneOptions{})
 	if result.Err() != nil {
@@ -348,7 +351,7 @@ func DevicePatch(c *gin.Context) {
 		return
 	}
 
-	var device db.Device
+	var device v1.Device
 	if err = result.Decode(&device); err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			c.JSON(util.Error(404, "404"))
@@ -370,7 +373,7 @@ func DevicePatch(c *gin.Context) {
 	}
 
 	if err := c.Bind(&d); err != nil {
-		c.JSON(util.Error(500, err.Error()))
+		c.JSON(util.Error(400, err.Error()))
 		return
 	}
 
@@ -427,7 +430,7 @@ func DeviceDelete(c *gin.Context) {
 		delete = true
 	}
 
-	collection := db.GetDeviceColl()
+	collection := v1.GetDeviceColl()
 
 	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": delete}, &options.FindOneOptions{})
 	if result.Err() != nil {
@@ -435,7 +438,7 @@ func DeviceDelete(c *gin.Context) {
 		return
 	}
 
-	var device db.Device
+	var device v1.Device
 	if err = result.Decode(&device); err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			c.JSON(util.Error(404, "404"))
@@ -481,7 +484,7 @@ func DeviceReset(c *gin.Context) {
 		delete = true
 	}
 
-	collection := db.GetDeviceColl()
+	collection := v1.GetDeviceColl()
 
 	result := collection.FindOne(context.Background(), bson.M{"_id": oid, "delete": delete}, &options.FindOneOptions{})
 	if result.Err() != nil {
@@ -489,7 +492,7 @@ func DeviceReset(c *gin.Context) {
 		return
 	}
 
-	var device db.Device
+	var device v1.Device
 	if err = result.Decode(&device); err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			c.JSON(util.Error(404, "404"))

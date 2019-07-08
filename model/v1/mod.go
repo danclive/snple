@@ -1,9 +1,10 @@
-package db
+package v1
 
 import (
 	"time"
 
 	"github.com/danclive/mqtt-console/config"
+	"github.com/danclive/mqtt-console/db"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -18,8 +19,12 @@ type User struct {
 	Desc   string             `bson:"desc" json:"desc"`
 }
 
+func (*User) ColName() string {
+	return "user"
+}
+
 func GetUserColl() *mongo.Collection {
-	return MongoClient.Database(config.Config.Mongo.Database, nil).Collection("user", nil)
+	return db.MongoClient.Database(config.Config.Mongo.Database, nil).Collection("user", nil)
 }
 
 type Device struct {
@@ -35,11 +40,32 @@ type Device struct {
 }
 
 type Values struct {
-	Name string `bson:"name"`
-	Desc string `bson:"desc"`
-	Type string `bson:"type"` // int, float, bool, string
+	Name string    `bson:"name"`
+	Desc string    `bson:"desc"`
+	Type string    `bson:"type"` // int, float, bool, string
+	Time time.Time `bson:"time" json:"time"`
+}
+
+func (*Device) ColName() string {
+	return "device"
 }
 
 func GetDeviceColl() *mongo.Collection {
-	return MongoClient.Database(config.Config.Mongo.Database, nil).Collection("device", nil)
+	return db.MongoClient.Database(config.Config.Mongo.Database, nil).Collection("device", nil)
+}
+
+type Option struct {
+	ID    primitive.ObjectID `bson:"_id" json:"id"`
+	Lable string             `bson:"lable" json:"lable"`
+	Name  string             `bson:"name"`
+	Value string             `bson:"value"`
+	VType string             `bson:"vtype"`
+}
+
+func (*Option) ColName() string {
+	return "option"
+}
+
+func GetOptionColl() *mongo.Collection {
+	return db.MongoClient.Database(config.Config.Mongo.Database, nil).Collection("option", nil)
 }

@@ -1,0 +1,29 @@
+.md-switch .md-switch-thumb .md-ripple,
+.md-switch .md-switch-thumb:before {
+  overflow: hidden;
+}
+
+.md-switch {
+  display: flex;
+
+  .md-switch-label {
+    color: rgba(0,0,0,.26);
+    font-size: 14px;
+    line-height: 1.42857;
+    font-weight: 400;
+  }
+
+  &.md-checked.md-success {
+    .md-switch-container {
+      background-color: rgba($green, .38);
+    }
+
+    .md-switch-thumb {
+      background-color: $green;
+    }
+
+    .md-ripple {
+      color: $green
+    }
+  }
+}
