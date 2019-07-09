@@ -19,7 +19,9 @@ func EmqxAuth(c *gin.Context) {
 	}
 
 	if err := c.Bind(&d); err != nil {
-		c.JSON(util.Error(400, err.Error()))
+		// c.JSON(util.Error(400, err.Error()))
+		log.Error(err)
+		c.Status(400)
 		return
 	}
 
@@ -34,20 +36,24 @@ func EmqxAuth(c *gin.Context) {
 		&options.FindOneOptions{})
 
 	if result.Err() != nil {
-		c.JSON(util.Error(500, result.Err().Error()))
+		// c.JSON(util.Error(500, result.Err().Error()))
+		log.Error(result.Err())
+		c.Status(500)
 		return
 	}
 
 	var device v1.Device
 	if err := result.Decode(&device); err != nil {
 		if err.Error() == "mongo: no documents in result" {
-			c.JSON(util.Error(404, "404"))
+			// c.JSON(util.Error(404, "404"))
+			c.Status(404)
 			return
 		}
 
 		log.Error(err)
 
-		c.JSON(util.Error(500, err.Error()))
+		// c.JSON(util.Error(500, err.Error()))
+		c.Status(500)
 		return
 	}
 
@@ -55,25 +61,32 @@ func EmqxAuth(c *gin.Context) {
 
 	result2 := userColl.FindOne(context, bson.M{"_id": device.UserID}, &options.FindOneOptions{})
 	if result2.Err() != nil {
-		c.JSON(util.Error(500, result.Err().Error()))
+		// c.JSON(util.Error(500, result.Err().Error()))
+		log.Error(result.Err())
+		c.Status(500)
 		return
 	}
 
 	var user v1.User
 	if err := result2.Decode(&user); err != nil {
 		if err.Error() == "mongo: no documents in result" {
-			c.JSON(util.Error(404, "404"))
+			// c.JSON(util.Error(404, "404"))
+			c.Status(404)
 			return
 		}
 
 		log.Error(err)
 
-		c.JSON(util.Error(500, err.Error()))
+		// c.JSON(util.Error(500, err.Error()))
+		log.Error(result.Err())
+		c.Status(500)
 		return
 	}
 
 	if d.Username != user.Name || util.PassEncode(d.Password) != user.Pass {
-		c.JSON(util.Error(401, "401"))
+		// c.JSON(util.Error(401, "401"))
+		c.Status(401)
+		return
 	}
 
 	c.Status(200)
@@ -86,7 +99,9 @@ func EmqxSuper(c *gin.Context) {
 	}
 
 	if err := c.Bind(&d); err != nil {
-		c.JSON(util.Error(400, err.Error()))
+		// c.JSON(util.Error(400, err.Error()))
+		log.Error(err)
+		c.Status(400)
 		return
 	}
 
@@ -101,20 +116,25 @@ func EmqxSuper(c *gin.Context) {
 		&options.FindOneOptions{})
 
 	if result.Err() != nil {
-		c.JSON(util.Error(500, result.Err().Error()))
+		// c.JSON(util.Error(500, result.Err().Error()))
+		log.Error(result.Err())
+		c.Status(500)
 		return
 	}
 
 	var device v1.Device
 	if err := result.Decode(&device); err != nil {
 		if err.Error() == "mongo: no documents in result" {
-			c.JSON(util.Error(404, "404"))
+			// c.JSON(util.Error(404, "404"))
+			c.Status(404)
 			return
 		}
 
 		log.Error(err)
 
-		c.JSON(util.Error(500, err.Error()))
+		// c.JSON(util.Error(500, err.Error()))
+		log.Error(err)
+		c.Status(500)
 		return
 	}
 
@@ -122,25 +142,32 @@ func EmqxSuper(c *gin.Context) {
 
 	result2 := userColl.FindOne(context, bson.M{"_id": device.UserID}, &options.FindOneOptions{})
 	if result2.Err() != nil {
-		c.JSON(util.Error(500, result.Err().Error()))
+		// c.JSON(util.Error(500, result.Err().Error()))
+		log.Error(result.Err())
+		c.Status(500)
 		return
 	}
 
 	var user v1.User
 	if err := result2.Decode(&user); err != nil {
 		if err.Error() == "mongo: no documents in result" {
-			c.JSON(util.Error(404, "404"))
+			// c.JSON(util.Error(404, "404"))
+			c.Status(404)
 			return
 		}
 
 		log.Error(err)
 
-		c.JSON(util.Error(500, err.Error()))
+		// c.JSON(util.Error(500, err.Error()))
+		log.Error(err)
+		c.Status(500)
 		return
 	}
 
 	if !user.Super {
-		c.JSON(util.Error(401, "401"))
+		// c.JSON(util.Error(401, "401"))
+		c.Status(401)
+		return
 	}
 
 	c.Status(200)
@@ -156,7 +183,9 @@ func EmqxAcl(c *gin.Context) {
 	}
 
 	if err := c.Bind(&d); err != nil {
-		c.JSON(util.Error(400, err.Error()))
+		// c.JSON(util.Error(400, err.Error()))
+		log.Error(err)
+		c.Status(400)
 		return
 	}
 
