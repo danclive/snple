@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@tweenjs/tween.js": "17.3.0",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "chartist": "0.11.0",
     "es6-promise": "4.2.5",
     "fullcalendar": "3.10.0",
